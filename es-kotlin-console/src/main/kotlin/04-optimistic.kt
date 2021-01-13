@@ -23,5 +23,7 @@ fun main() {
     thingService.createNewIndexByJson()
 
     // 楽観的ロックによる更新
-    thingService.optimisticLocking() // debug print
+    thingService.optimisticLocking01() // debug print
+
+
 }

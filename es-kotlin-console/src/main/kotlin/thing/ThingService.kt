@@ -105,7 +105,7 @@ class ThingService(
     /**
      * 楽観的ロックによる更新
      */
-    fun optimisticLocking() {
+    fun optimisticLocking01() {
         repo.index("2", Thing("Another thing"))
 
         val (obj, rawGetResponse) = repo.getWithGetResponse("2")
