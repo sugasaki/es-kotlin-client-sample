@@ -4,6 +4,9 @@ import org.elasticsearch.client.indexRepository
 import thing.Thing
 import thing.ThingService
 
+/**
+ * CRUD操作
+ */
 fun main() {
     // connects to elastic cloud
     val esClient = create(host = "localhost", port = 9200)

@@ -3,6 +3,9 @@ import org.elasticsearch.client.indexRepository
 import thing.Thing
 import thing.ThingService
 
+/**
+ * 楽観的ロックによる更新
+ */
 fun main() {
     // connects to elastic cloud
     val esClient = create(host = "localhost", port = 9200)
