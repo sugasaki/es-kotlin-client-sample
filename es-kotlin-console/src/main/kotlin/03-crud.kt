@@ -2,18 +2,18 @@ import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.client.create
 import org.elasticsearch.client.indexRepository
 import thing.Thing
-import thing.ThingSearch
+import thing.ThingService
 
 fun main() {
     // connects to elastic cloud
     val esClient = create(host = "localhost", port = 9200)
 
     val thingRepository = esClient.indexRepository<Thing>("things")
-    val recipeSearch = ThingSearch(thingRepository)
+    val thingService = ThingService(thingRepository)
 
     // indexを作成
-    recipeSearch.deleteIndex()
-    recipeSearch.createNewIndex()
+    thingService.deleteIndex()
+    thingService.createNewIndex()
 
     // 1. ドキュメント追加
     val id = "first"

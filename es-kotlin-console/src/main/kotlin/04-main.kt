@@ -18,5 +18,7 @@ fun main() {
     // jsonからIndexを作成
     thingService.deleteIndex()
     thingService.createNewIndexByJson()
-    thingService.consolePrintMappings() // debug print
+
+    // 楽観的ロックによる更新
+    thingService.optimisticLocking() // debug print
 }

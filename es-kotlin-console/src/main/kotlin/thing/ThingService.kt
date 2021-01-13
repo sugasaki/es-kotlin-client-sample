@@ -1,16 +1,18 @@
 package thing
 
 import com.jillesvangurp.eskotlinwrapper.IndexRepository
+import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.client.configure
 import org.elasticsearch.client.source
 import org.elasticsearch.common.xcontent.stringify
 
-data class Thing(val name: String, val amount: Long = 42)
-
-class ThingSearch(
+class ThingService(
     private val repo: IndexRepository<Thing>
 ) {
 
+    /**
+     * Index作成
+     */
     fun createNewIndex() {
         repo.createIndex {
             // use our friendly DSL to configure the index
@@ -45,10 +47,16 @@ class ThingSearch(
         }
     }
 
+    /**
+     * Index削除
+     */
     fun deleteIndex() {
         repo.deleteIndex()
     }
 
+    /**
+     * マッピング取得＆デバッグプリント
+     */
     fun consolePrintMappings() { // stringify is a useful extension function we added to the response
         println(repo.getSettings().stringify(true))
 
@@ -58,6 +66,9 @@ class ThingSearch(
             }
     }
 
+    /**
+     * JSONからIndexを作成
+     */
     fun createNewIndexByJson() {
         // delete the previous version of our index
         repo.deleteIndex()
@@ -88,6 +99,42 @@ class ThingSearch(
                   }
                 """
             )
+        }
+    }
+
+    /**
+     * 楽観的ロックによる更新
+     */
+    fun optimisticLocking() {
+        repo.index("2", Thing("Another thing"))
+
+        val (obj, rawGetResponse) = repo.getWithGetResponse("2")
+            ?: throw IllegalStateException("We just created this?!")
+
+        println(
+            "obj with name '${obj.name}' has id: ${rawGetResponse.id}, " +
+                "primaryTerm: ${rawGetResponse.primaryTerm}, and " +
+                "seqNo: ${rawGetResponse.seqNo}"
+        )
+        // This works
+        repo.index(
+            "2",
+            Thing("Another Thing"),
+            seqNo = rawGetResponse.seqNo,
+            primaryTerm = rawGetResponse.primaryTerm,
+            create = false
+        )
+        try {
+            // ... but if we use these values again it fails
+            repo.index(
+                "2",
+                Thing("Another Thing"),
+                seqNo = rawGetResponse.seqNo,
+                primaryTerm = rawGetResponse.primaryTerm,
+                create = false
+            )
+        } catch (e: ElasticsearchStatusException) {
+            println("Version conflict! Es returned ${e.status().status}")
         }
     }
 }
