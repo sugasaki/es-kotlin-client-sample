@@ -4,8 +4,8 @@ import thing.Thing
 import thing.ThingService
 
 /**
- * 楽観的ロックによる更新
- * updateを使っての更新
+ * Bulk Indexing
+ * 一括処理を簡単に
  */
 fun main() {
     // connects to elastic cloud
@@ -18,17 +18,8 @@ fun main() {
     thingService.deleteIndex()
     thingService.createNewIndex()
 
-    val id = "3"
+    // Bulk Indexing
+    thingService.bulkInset(500)
 
-    // データ追加
-    thingRepository.index(id, Thing("Yet another thing"))
-    thingService.consolePrintThing(id)
-
-    // 更新
-    thingRepository.update(id) { Thing("Another Thing") }
-    thingService.consolePrintThing(id)
-
-    // 更新
-    thingRepository.update(id) { Thing(name = "we can do this again and again") }
-    thingService.consolePrintThing(id)
+    println("Lets get one of them " + thingRepository.get("doc-100"))
 }

@@ -1,7 +1,7 @@
 package thing
 
 import com.jillesvangurp.eskotlinwrapper.IndexRepository
-import org.elasticsearch.ElasticsearchStatusException
+import org.elasticsearch.action.support.WriteRequest
 import org.elasticsearch.client.configure
 import org.elasticsearch.client.source
 import org.elasticsearch.common.xcontent.stringify
@@ -103,38 +103,48 @@ class ThingService(
     }
 
     /**
-     * 楽観的ロックによる更新
+     * IDを指定してデータを取得し、コンソールに内容を出力
+     * @param id String
      */
-    fun optimisticLocking01() {
-        repo.index("2", Thing("Another thing"))
-
-        val (obj, rawGetResponse) = repo.getWithGetResponse("2")
+    fun consolePrintThing(id: String) {
+        val (obj, rawGetResponse) = repo.getWithGetResponse(id)
             ?: throw IllegalStateException("We just created this?!")
 
         println(
             "obj with name '${obj.name}' has id: ${rawGetResponse.id}, " +
+                "amount: '${obj.amount}', " +
                 "primaryTerm: ${rawGetResponse.primaryTerm}, and " +
                 "seqNo: ${rawGetResponse.seqNo}"
         )
-        // This works
-        repo.index(
-            "2",
-            Thing("Another Thing"),
-            seqNo = rawGetResponse.seqNo,
-            primaryTerm = rawGetResponse.primaryTerm,
-            create = false
-        )
-        try {
-            // ... but if we use these values again it fails
-            repo.index(
-                "2",
-                Thing("Another Thing"),
-                seqNo = rawGetResponse.seqNo,
-                primaryTerm = rawGetResponse.primaryTerm,
-                create = false
-            )
-        } catch (e: ElasticsearchStatusException) {
-            println("Version conflict! Es returned ${e.status().status}")
+    }
+
+    /**
+     * Bulk Indexing
+     * @param bulkSize Int
+     */
+    fun bulkInset(bulkSize: Int = 500) {
+        // BulkIndexingSession<Thing>を作成し、ブロックに渡します。
+        repo.bulk {
+            1.rangeTo(bulkSize).forEach {
+                index("doc-$it", Thing("indexed $it", 666))
+            }
         }
     }
+
+    /**
+     * Bulk Indexing
+     * @param bulkSize Int
+     */
+    fun bulkInset2(bulkSize: Int = 100) {
+        repo.bulk(refreshPolicy = WriteRequest.RefreshPolicy.IMMEDIATE) {
+            index("1", Thing("The quick brown fox"))
+            index("2", Thing("The quick brown emu"))
+            index("3", Thing("The quick brown gnu"))
+            index("4", Thing("Another thing"))
+            5.rangeTo(bulkSize).forEach {
+                index("$it", Thing("Another thing: $it"))
+            }
+        }
+    }
+
 }

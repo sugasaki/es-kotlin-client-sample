@@ -9,5 +9,9 @@ docker logs -f es_kibana_elasticsearch_1
 
 # shut it down
 docker-compose down
+
+# access to kibana
+localhost:5601
+
 ```
 
